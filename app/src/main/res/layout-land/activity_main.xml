@@ -1,65 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TableRow
-            android:layout_weight="*">
+        <TableRow>
 
-            <GridLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="3"
-                android:padding="5dp"
-                android:rowCount="1">
+            <EditText
+                android:id="@+id/search_text_edit"
+                android:layout_weight="1"
+                android:autofillHints=""
+                android:hint="@string/search"
+                android:inputType="text" />
 
-                <EditText
-                    android:id="@+id/search_text_edit"
-                    android:layout_gravity="fill"
-                    android:autofillHints=""
-                    android:hint="@string/search"
-                    android:inputType="text" />
+            <ImageView
 
-                <ImageView
+                android:id="@+id/search_icon"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_margin="5dp"
+                android:contentDescription="@string/search"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_search_24" />
 
-                    android:id="@+id/search_icon"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
-                    android:layout_margin="5dp"
-                    android:contentDescription="@string/search"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_baseline_search_24" />
+            <ImageView
 
-                <ImageView
-
-                    android:id="@+id/filter_priority_icon"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
-                    android:layout_margin="5dp"
-                    android:contentDescription="@string/search"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_baseline_filter_none_24" />
-            </GridLayout>
+                android:id="@+id/filter_priority_icon"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_margin="5dp"
+                android:contentDescription="@string/search"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_filter_none_24" />
         </TableRow>
 
-        <TableRow
-            android:layout_weight="1">
+        <TableRow android:layout_weight="1">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/note_list"
-                android:layout_weight="1"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
 
         </TableRow>
 
         <TableRow
-            android:layout_weight="*"
+
             android:padding="5dp">
 
             <Button
