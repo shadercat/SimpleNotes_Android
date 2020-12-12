@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/ripple"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:rowCount="1">
+
+        <ImageView
+            android:id="@+id/item_note_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:contentDescription="@string/note_image" />
+
+        <TextView
+            android:id="@+id/item_note_title"
+            android:layout_marginLeft="15dp"
+            android:text="@string/sample"
+            android:textSize="10pt"
+            android:layout_gravity="fill"/>
+
+        <GridLayout
+            android:rowCount="2"
+            android:columnCount="1">
+            <TextView
+                android:id="@+id/item_note_date"
+                android:text="@string/sample_date"
+                />
+            <ImageView
+                android:id="@+id/item_note_priority_icon"
+                android:src="@drawable/ic_baseline_filter_none_24"
+                android:contentDescription="@string/priority_icon"
+                android:layout_gravity="right"/>
+        </GridLayout>
+
+    </GridLayout>
+</LinearLayout>

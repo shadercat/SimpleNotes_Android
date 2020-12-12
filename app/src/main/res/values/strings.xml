@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Lab_4</string>
+    <string name="add_new">Add new</string>
+    <string name="search">Search</string>
+    <string name="first_priority">First priority</string>
+    <string name="second_priority">Second priority</string>
+    <string name="third_priority">Third priority</string>
+    <string name="note_image">Note image</string>
+    <string name="sample">sample</string>
+    <string name="sample_date">00/00/0000 00:00</string>
+    <string name="priority_icon">Priority icon</string>
+</resources>
