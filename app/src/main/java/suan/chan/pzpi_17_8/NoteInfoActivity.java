@@ -48,7 +48,7 @@ public class NoteInfoActivity extends AppCompatActivity {
             newNote = false;
             noteId = (long) arguments.getSerializable(NOTE_ID);
             note = noteService.getNote(noteId);
-            setNoteInfo(note);
+            setDisplayNoteInfo(note);
         } else {
             note = new Note();
         }
@@ -69,24 +69,34 @@ public class NoteInfoActivity extends AppCompatActivity {
     }
 
     private void saveNote(){
+        setNoteInfoPartialHelper();
         if(newNote){
-            //do something;
+            noteService.AddNewNote(note);
+            newNote = false;
         } else {
-            //do something;
+            noteService.updateNote(note);
         }
         Intent intent = new Intent();
         setResult(RESULT_OK, intent);
         Toast.makeText(getApplicationContext(), R.string.successful_save, Toast.LENGTH_SHORT).show();
     }
 
-    private void setNoteInfo(Note note){
+    private void setDisplayNoteInfo(Note note){
         title.setText(note.getTitle());
         description.setText(note.getDescription());
-        text.setText(getString(R.string.sample));
+        if(note.getText() != null){
+            text.setText(note.getText());
+        }
         setDisplayNotePriorityInfo(note);
         if(note.getImage() != null){
             image.setImageBitmap(note.getImage());
         }
+    }
+
+    private void setNoteInfoPartialHelper(){
+        note.setTitle(title.getText().toString().trim());
+        note.setDescription(description.getText().toString().trim());
+        note.setText(text.getText().toString().trim());
     }
 
     private void setDisplayNotePriorityInfo(Note note){

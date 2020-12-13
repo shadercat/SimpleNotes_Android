@@ -7,7 +7,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class NotesDbHelper extends SQLiteOpenHelper {
 
-    private static final String NOTES_LIST = "Notes_List";
+    public static final String NOTES_LIST = "notes_list";
+    public static final String NOTES_TABLE = "notes";
+    public static final String ID_FIELD = "id";
+    public static final String TITLE_FIELD = "title";
+    public static final String DESCRIPTION_FIELD = "description";
+    public static final String DATE_FIELD = "date";
+    public static final String PRIORITY_FIELD = "priority";
 
     public NotesDbHelper(Context context){
         super(context, NOTES_LIST, null, 1);

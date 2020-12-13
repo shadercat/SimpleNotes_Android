@@ -18,4 +18,5 @@
     <string name="priority">Priority</string>
     <string name="save">Save</string>
     <string name="successful_save">Save successful</string>
+    <string name="none">None</string>
 </resources>

@@ -20,6 +20,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import suan.chan.pzpi_17_8.entity.Note;
+import suan.chan.pzpi_17_8.entity.PriorityType;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,11 +52,33 @@ public class MainActivity extends AppCompatActivity {
 
         initNotesRecyclerView();
 
-        viewModel.getNotes().observe(this, new Observer<ArrayList<Note>>() {
+        viewModel.getNotesProjection().observe(this, new Observer<ArrayList<Note>>() {
             @Override
             public void onChanged(ArrayList<Note> notes) {
                 notesList = notes;
                 noteListAdapter.setNotes(notes);
+            }
+        });
+
+        viewModel.getCurrentPriorityFilter().observe(this, new Observer<PriorityType>() {
+            @Override
+            public void onChanged(PriorityType priorityType) {
+                if(priorityType == null){
+                    filterIcon.setImageResource(R.drawable.ic_baseline_filter_none_24);
+                    return;
+                }
+                switch (priorityType){
+
+                    case First:
+                        filterIcon.setImageResource(R.drawable.ic_baseline_filter_1_24);
+                        break;
+                    case Second:
+                        filterIcon.setImageResource(R.drawable.ic_baseline_filter_2_24);
+                        break;
+                    case Third:
+                        filterIcon.setImageResource(R.drawable.ic_baseline_filter_3_24);
+                        break;
+                }
             }
         });
 
@@ -77,6 +100,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 openNoteInfoActivity();
+            }
+        });
+
+        filterIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                priorityFilterAlertDialog();
             }
         });
     }
@@ -122,13 +152,53 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+    private void priorityFilterAlertDialog(){
+        final String[] options = {getString(R.string.first_priority), getString(R.string.second_priority), getString(R.string.third_priority), getString(R.string.none)};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                switch (i) {
+                    case 0:
+                        dialogInterface.cancel();
+                        viewModel.priorityFiltering(PriorityType.First);
+                        break;
+                    case 1:
+                        dialogInterface.cancel();
+                        viewModel.priorityFiltering(PriorityType.Second);
+                        break;
+                    case 2:
+                        dialogInterface.cancel();
+                        viewModel.priorityFiltering(PriorityType.Third);
+                        break;
+                    case 3:
+                        dialogInterface.cancel();
+                        viewModel.clearPriorityFilter();
+                        break;
+                    default:
+                        dialogInterface.cancel();
+                        break;
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case EDIT_ACTIVITY:
                 if (resultCode == RESULT_OK) {
-                    viewModel.refreshNotes();
+                    viewModel.reloadNotes();
                     Toast.makeText(getApplicationContext(), "edited", Toast.LENGTH_SHORT).show();
                 }
                 break;

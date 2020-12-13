@@ -8,12 +8,17 @@ public class Note {
     private Long id;
     private String title;
     private String description;
+    private String text;
     private PriorityType priority;
     private Date editTime;
     private Bitmap image;
 
     public Note(){
-
+        title = "";
+        description = "";
+        text = "";
+        priority = PriorityType.Third;
+        editTime = new Date(System.currentTimeMillis());
     }
 
     public Note(Long id, String title, String description, PriorityType priority, Date editTime){
@@ -71,5 +76,13 @@ public class Note {
 
     public void setImage(Bitmap image) {
         this.image = image;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 }
