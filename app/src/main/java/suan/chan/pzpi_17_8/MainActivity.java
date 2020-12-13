@@ -79,40 +79,37 @@ public class MainActivity extends AppCompatActivity {
         noteList.addItemDecoration(itemDecoration);
     }
 
-    private void initClickAlertDialog(long itemIndex){
+    private void initClickAlertDialog(final long itemIndex){
 
         final String[] options = {getString(R.string.edit), getString(R.string.delete)};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View inflater = this.getLayoutInflater().inflate(R.layout.dialog_note_context, null);
-        inflater.findViewById(R.id.dialog_context_delete_btn).setOnClickListener(clickAlertDialogResultHandler(itemIndex));
-        inflater.findViewById(R.id.dialog_context_edit_btn).setOnClickListener(clickAlertDialogResultHandler(itemIndex));
-        builder.setView(inflater)
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                switch (i){
+                    case 0:
                         dialogInterface.cancel();
-                    }
-                });
+                        Toast.makeText(getApplicationContext(), "Edit " + itemIndex, Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        dialogInterface.cancel();
+                        Toast.makeText(getApplicationContext(), "Delete " + itemIndex, Toast.LENGTH_SHORT).show();
+                        break;
+                    default:
+                        dialogInterface.cancel();
+                        break;
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
 
-    private View.OnClickListener clickAlertDialogResultHandler(final long itemIndex){
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                switch (view.getId()){
-                    case R.id.dialog_context_edit_btn:
-                        Toast.makeText(getApplicationContext(), "Edit " + itemIndex, Toast.LENGTH_SHORT).show();
-                        break;
-                    case R.id.dialog_context_delete_btn:
-                        Toast.makeText(getApplicationContext(), "Delete " + itemIndex, Toast.LENGTH_SHORT).show();
-                        break;
-                    default:
-                        break;
-                }
-            }
-        };
-    }
 }
