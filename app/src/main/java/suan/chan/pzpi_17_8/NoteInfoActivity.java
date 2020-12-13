@@ -1,8 +1,14 @@
 package suan.chan.pzpi_17_8;
 
+import androidx.activity.OnBackPressedDispatcher;
+import androidx.activity.OnBackPressedDispatcherOwner;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,6 +18,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
@@ -36,6 +43,7 @@ public class NoteInfoActivity extends AppCompatActivity {
     Button saveBtn;
     NoteService noteService;
     Note note;
+    NoteInfoViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,15 +59,22 @@ public class NoteInfoActivity extends AppCompatActivity {
         saveBtn = findViewById(R.id.note_info_save_btn);
         priority = findViewById(R.id.note_info_priority);
 
+        viewModel = new ViewModelProvider(this).get(NoteInfoViewModel.class);
+
         Bundle arguments = getIntent().getExtras();
         if(arguments != null){
             newNote = false;
             noteId = (long) arguments.getSerializable(NOTE_ID);
-            note = noteService.getNote(noteId);
-            setDisplayNoteInfo(note);
-        } else {
-            note = new Note();
+            viewModel.loadNote(noteId);
         }
+
+        viewModel.getLiveNote().observe(this, new Observer<Note>() {
+            @Override
+            public void onChanged(Note noteF) {
+                note = noteF;
+                setDisplayNoteInfo(note);
+            }
+        });
 
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -154,6 +169,7 @@ public class NoteInfoActivity extends AppCompatActivity {
                         dialogInterface.cancel();
                         break;
                 }
+
                 setDisplayNotePriorityInfo(note);
             }
         });
@@ -193,6 +209,12 @@ public class NoteInfoActivity extends AppCompatActivity {
                 image.setImageBitmap(res);
             }
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        setNoteInfoPartialHelper();
     }
 
     private Bitmap scaleBitmap(Bitmap bm) {

@@ -14,6 +14,7 @@ public class Note {
     private Bitmap image;
 
     public Note(){
+        id = Long.valueOf(0);
         title = "";
         description = "";
         text = "";
