@@ -1,5 +1,7 @@
 package suan.chan.pzpi_17_8.entity;
 
+import android.graphics.Bitmap;
+
 import java.util.Date;
 
 public class Note {
@@ -8,6 +10,7 @@ public class Note {
     private String description;
     private PriorityType priority;
     private Date editTime;
+    private Bitmap image;
 
     public Note(){
 
@@ -60,5 +63,13 @@ public class Note {
 
     public void setEditTime(Date editTime) {
         this.editTime = editTime;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
     }
 }

@@ -33,10 +33,10 @@ public class AppViewModel extends AndroidViewModel {
         return liveNotes;
     }
 
-    private Runnable loadingNotes = new Runnable() {
+    private final Runnable loadingNotes = new Runnable() {
         @Override
         public void run() {
-            NoteService service = new NoteService();
+            NoteService service = new NoteService(getApplication().getApplicationContext());
             final ArrayList<Note> n = service.getNotes();
             ctxHandler.post(new Runnable() {
                 @Override
@@ -52,6 +52,23 @@ public class AppViewModel extends AndroidViewModel {
         if(notes == null){
             parallelThread.postTask(loadingNotes);
         }
+    }
+
+    public void deleteNote(int noteIndex){
+        NoteService service = new NoteService(getApplication().getApplicationContext());
+        service.deleteNote(notes.get(noteIndex).getId());
+        notes.remove(noteIndex);
+        liveNotes.postValue(notes);
+    }
+
+    public void refreshNotes(){
+        liveNotes.postValue(notes);
+    }
+
+    public void reloadNotes(){
+        notes.clear();
+        liveNotes.postValue(notes);
+        parallelThread.postTask(loadingNotes);
     }
 
     @Override

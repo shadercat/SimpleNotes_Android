@@ -1,14 +1,15 @@
 package suan.chan.pzpi_17_8;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,12 +17,14 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.security.Provider;
 import java.util.ArrayList;
 
 import suan.chan.pzpi_17_8.entity.Note;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int EDIT_ACTIVITY = 393;
+    private static final int ADD_ACTIVITY = 620;
 
     EditText searchBox;
     ImageView searchIcon;
@@ -69,9 +72,16 @@ public class MainActivity extends AppCompatActivity {
         };
 
         noteListAdapter.setClickHandler(onClickHandlers);
+
+        addNote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openNoteInfoActivity();
+            }
+        });
     }
 
-    private void initNotesRecyclerView(){
+    private void initNotesRecyclerView() {
         //noteList.setLayoutManager(new LinearLayoutManager(this));
         noteListAdapter = new NoteListAdapter();
         noteList.setAdapter(noteListAdapter);
@@ -79,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         noteList.addItemDecoration(itemDecoration);
     }
 
-    private void initClickAlertDialog(final long itemIndex){
+    private void initClickAlertDialog(final long itemIndex) {
 
         final String[] options = {getString(R.string.edit), getString(R.string.delete)};
 
@@ -87,14 +97,14 @@ public class MainActivity extends AppCompatActivity {
         builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                switch (i){
+                switch (i) {
                     case 0:
                         dialogInterface.cancel();
-                        Toast.makeText(getApplicationContext(), "Edit " + itemIndex, Toast.LENGTH_SHORT).show();
+                        openNoteInfoActivity(notesList.get((int) itemIndex).getId());
                         break;
                     case 1:
                         dialogInterface.cancel();
-                        Toast.makeText(getApplicationContext(), "Delete " + itemIndex, Toast.LENGTH_SHORT).show();
+                        viewModel.deleteNote((int) itemIndex);
                         break;
                     default:
                         dialogInterface.cancel();
@@ -110,6 +120,38 @@ public class MainActivity extends AppCompatActivity {
         });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case EDIT_ACTIVITY:
+                if (resultCode == RESULT_OK) {
+                    viewModel.refreshNotes();
+                    Toast.makeText(getApplicationContext(), "edited", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case ADD_ACTIVITY:
+                if (resultCode == RESULT_OK) {
+                    viewModel.reloadNotes();
+                    Toast.makeText(getApplicationContext(), "added", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void openNoteInfoActivity() {
+        Intent noteInfo = new Intent(getApplicationContext(), NoteInfoActivity.class);
+        startActivityForResult(noteInfo, ADD_ACTIVITY);
+    }
+
+    private void openNoteInfoActivity(long noteId) {
+        Intent noteInfo = new Intent(getApplicationContext(), NoteInfoActivity.class);
+        noteInfo.putExtra(NoteInfoActivity.NOTE_ID, noteId);
+        startActivityForResult(noteInfo, EDIT_ACTIVITY);
     }
 
 }

@@ -80,6 +80,9 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteVi
                     priority.setImageResource(R.drawable.ic_baseline_filter_3_24);
                     break;
             }
+            if(note.getImage() != null){
+                img.setImageBitmap(note.getImage());
+            }
         }
 
         @Override
