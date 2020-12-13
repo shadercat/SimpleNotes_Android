@@ -59,6 +59,29 @@ public class AppViewModel extends AndroidViewModel {
         }
     };
 
+    private Runnable filteringNotes(final String searchedString){
+        return new Runnable() {
+            @Override
+            public void run() {
+                NoteService service = new NoteService(getApplication().getApplicationContext());
+                final ArrayList<Note> found = new ArrayList<>();
+                for (Note n : notesProjection) {
+                    if(service.isNoteFileContainedString(n.getId(), searchedString)){
+                        found.add(n);
+                    }
+                }
+                ctxHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        notesProjection.clear();
+                        notesProjection.addAll(found);
+                        liveNotes.postValue(notesProjection);
+                    }
+                });
+            }
+        };
+    }
+
     private void loadNotes(){
         if(notesProjection == null){
             parallelThread.postTask(loadingNotes);
@@ -97,6 +120,16 @@ public class AppViewModel extends AndroidViewModel {
 
     public void clearPriorityFilter(){
         livePriorityFilter.postValue(null);
+        notesProjection.clear();
+        notesProjection.addAll(notes);
+        liveNotes.postValue(notesProjection);
+    }
+
+    public void searchFiltering(String searchString){
+        parallelThread.postTask(filteringNotes(searchString));
+    }
+
+    public void clearSearchFilter(){
         notesProjection.clear();
         notesProjection.addAll(notes);
         liveNotes.postValue(notesProjection);

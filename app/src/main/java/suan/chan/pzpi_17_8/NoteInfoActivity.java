@@ -1,11 +1,18 @@
 package suan.chan.pzpi_17_8;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +24,7 @@ import suan.chan.pzpi_17_8.entity.PriorityType;
 
 public class NoteInfoActivity extends AppCompatActivity {
     public static final String NOTE_ID  = "NOTE_ID";
+    private static final int LOAD_IMAGE_INTENT = 743;
 
     boolean newNote = true;
     long noteId;
@@ -64,6 +72,14 @@ public class NoteInfoActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setPriorityAlertDialog();
+            }
+        });
+
+        image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent pickPhoto = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickPhoto, LOAD_IMAGE_INTENT);
             }
         });
     }
@@ -149,5 +165,59 @@ public class NoteInfoActivity extends AppCompatActivity {
         });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == LOAD_IMAGE_INTENT && resultCode == RESULT_OK && data != null){
+            Uri selectedImage = data.getData();
+
+            String picturePath = null;
+            String[] filePathCol = {MediaStore.Images.Media.DATA};
+            if(selectedImage != null){
+                Cursor cursor = getContentResolver().query(selectedImage, filePathCol, null, null, null);
+                if(cursor != null){
+                    cursor.moveToFirst();
+                    int columnIndex = cursor.getColumnIndex(filePathCol[0]);
+                    picturePath = cursor.getString(columnIndex);
+                    cursor.close();
+                }
+            }
+
+            if(picturePath != null){
+                Bitmap selectedBmp = BitmapFactory.decodeFile(picturePath);
+                Bitmap res = scaleBitmap(selectedBmp);
+                selectedBmp.recycle();
+                note.setImage(res);
+                image.setImageBitmap(res);
+            }
+        }
+    }
+
+    private Bitmap scaleBitmap(Bitmap bm) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        int maxWidth = 150;
+        int maxHeight = 150;
+
+        if (width > height) {
+            // landscape
+            float ratio = (float) width / maxWidth;
+            width = maxWidth;
+            height = (int)(height / ratio);
+        } else if (height > width) {
+            // portrait
+            float ratio = (float) height / maxHeight;
+            height = maxHeight;
+            width = (int)(width / ratio);
+        } else {
+            // square
+            height = maxHeight;
+            width = maxWidth;
+        }
+
+        bm = Bitmap.createScaledBitmap(bm, width, height, true);
+        return bm;
     }
 }

@@ -66,7 +66,7 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteVi
         }
 
         public void bind(Note note){
-            SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ENGLISH);
+            SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
             title.setText(note.getTitle());
             date.setText(formater.format(note.getEditTime()));
             switch (note.getPriority()){
@@ -83,6 +83,8 @@ public class NoteListAdapter extends RecyclerView.Adapter<NoteListAdapter.NoteVi
             }
             if(note.getImage() != null){
                 img.setImageBitmap(note.getImage());
+            } else {
+                img.setImageResource(R.drawable.ic_baseline_crop_original_24);
             }
         }
 

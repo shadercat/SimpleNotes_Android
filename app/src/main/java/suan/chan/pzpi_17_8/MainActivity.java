@@ -109,6 +109,18 @@ public class MainActivity extends AppCompatActivity {
                 priorityFilterAlertDialog();
             }
         });
+
+        searchIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String text = searchBox.getText().toString().trim();
+                if(!text.isEmpty()){
+                    viewModel.searchFiltering(text);
+                } else {
+                    viewModel.clearSearchFilter();
+                }
+            }
+        });
     }
 
     private void initNotesRecyclerView() {

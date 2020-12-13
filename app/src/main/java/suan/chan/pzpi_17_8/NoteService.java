@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import java.io.File;
@@ -48,11 +49,10 @@ public class NoteService {
                     n.setDescription(c.getString(descriptionColIndex));
                     n.setEditTime(new Date(c.getLong(dateColIndex)));
                     n.setPriority(PriorityType.values()[c.getInt(priorityColIndex)]);
-                    n.setImage(BitmapFactory.decodeResource(appContext.getResources(), R.drawable.landscape_sample));
+                    n.setImage(getImage(n.getId()));
                     notes.add(n);
                 } while (c.moveToNext());
             }
-            c.close();
         }
         dbHelper.close();
         return notes;
@@ -71,6 +71,7 @@ public class NoteService {
         if (insert != 0) {
             note.setId(insert);
             saveText(note);
+            saveImage(note);
         }
     }
 
@@ -91,16 +92,26 @@ public class NoteService {
                 n.setDescription(c.getString(descriptionColIndex));
                 n.setEditTime(new Date(c.getLong(dateColIndex)));
                 n.setPriority(PriorityType.values()[c.getInt(priorityColIndex)]);
-                n.setImage(BitmapFactory.decodeResource(appContext.getResources(), R.drawable.landscape_sample));
                 String text = getText(n.getId());
                 if (text != null) {
                     n.setText(text);
                 }
+                Bitmap img = getImage(n.getId());
+                if (img != null) {
+                    n.setImage(img);
+                }
             }
-            c.close();
         }
         dbHelper.close();
         return n;
+    }
+
+    public boolean isNoteFileContainedString(long noteId, String string){
+        String text = getText(noteId);
+        if(text != null){
+            return text.contains(string);
+        }
+        return false;
     }
 
     public void deleteNote(long id) {
@@ -110,6 +121,7 @@ public class NoteService {
         dbHelper.close();
         if (delete != 0) {
             deleteText(id);
+            deleteImage(id);
         }
     }
 
@@ -125,6 +137,7 @@ public class NoteService {
         dbHelper.close();
         if (update != 0) {
             saveText(note);
+            saveImage(note);
         }
     }
 
@@ -134,21 +147,20 @@ public class NoteService {
         try {
             File resDir = appContext.getDir(ROOT_NOTES, Context.MODE_PRIVATE);
             File resFile = new File(resDir, noteId + ".txt");
-            if(resFile.exists()){
+            if (resFile.exists()) {
                 fin = new FileInputStream(resFile);
                 byte[] bytes = new byte[fin.available()];
                 fin.read(bytes);
                 text = new String(bytes);
             }
-        } catch (IOException ignored){
+        } catch (IOException ignored) {
 
-        }
-        finally {
+        } finally {
             try {
-                if(fin != null){
+                if (fin != null) {
                     fin.close();
                 }
-            } catch (IOException ignored){
+            } catch (IOException ignored) {
 
             }
         }
@@ -181,6 +193,65 @@ public class NoteService {
     public void deleteText(long noteId) {
         File resDir = appContext.getDir(ROOT_NOTES, Context.MODE_PRIVATE);
         File resFile = new File(resDir, noteId + ".txt");
+        if (resFile.exists()) {
+            final boolean delete = resFile.delete();
+        }
+    }
+
+    public Bitmap getImage(long noteId) {
+        Bitmap image = null;
+        FileInputStream fin = null;
+        try {
+            File resDir = appContext.getDir(ROOT_IMAGE, Context.MODE_PRIVATE);
+            File resFile = new File(resDir, noteId + ".png");
+            if (resFile.exists()) {
+                fin = new FileInputStream(resFile);
+                byte[] bytes = new byte[fin.available()];
+                fin.read(bytes);
+                image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            }
+        } catch (IOException ignored) {
+
+        } finally {
+            try {
+                if (fin != null) {
+                    fin.close();
+                }
+            } catch (IOException ignored) {
+
+            }
+        }
+        return image;
+    }
+
+    public void saveImage(Note note) {
+        if (note.getImage() != null) {
+            try {
+                File resDir = appContext.getDir(ROOT_IMAGE, Context.MODE_PRIVATE);
+                File resFile = new File(resDir, note.getId() + ".png");
+                if (!resFile.exists()) {
+                    final boolean newFile = resFile.createNewFile();
+                    if (newFile) {
+                        FileOutputStream fos = new FileOutputStream(resFile);
+                        note.getImage().compress(Bitmap.CompressFormat.PNG, 100, fos);
+                        fos.flush();
+                        fos.close();
+                    }
+                } else {
+                    FileOutputStream fos = new FileOutputStream(resFile);
+                    note.getImage().compress(Bitmap.CompressFormat.PNG, 100, fos);
+                    fos.flush();
+                    fos.close();
+                }
+            } catch (IOException ignored) {
+
+            }
+        }
+    }
+
+    public void deleteImage(long noteId) {
+        File resDir = appContext.getDir(ROOT_IMAGE, Context.MODE_PRIVATE);
+        File resFile = new File(resDir, noteId + ".png");
         if (resFile.exists()) {
             final boolean delete = resFile.delete();
         }
