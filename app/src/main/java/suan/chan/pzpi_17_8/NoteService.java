@@ -4,26 +4,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Date;
 
 import suan.chan.pzpi_17_8.entity.Note;
 import suan.chan.pzpi_17_8.entity.PriorityType;
-import suan.chan.pzpi_17_8.util.NotesDbHelper;
+import suan.chan.pzpi_17_8.util.DbBitmapUtility;
+import suan.chan.pzpi_17_8.util.NotesDbHelperV2;
 
 public class NoteService {
-    private static final String ROOT_NOTES = "notes";
-    private static final String ROOT_IMAGE = "images";
 
     Context appContext;
 
@@ -33,15 +23,16 @@ public class NoteService {
 
     public ArrayList<Note> getNotesForList() {
         ArrayList<Note> notes = new ArrayList<>();
-        NotesDbHelper dbHelper = new NotesDbHelper(appContext);
+        NotesDbHelperV2 dbHelper = new NotesDbHelperV2(appContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        try (Cursor c = db.query(NotesDbHelper.NOTES_TABLE, null, null, null, null, null, null)) {
+        try (Cursor c = db.query(NotesDbHelperV2.NOTES_TABLE, null, null, null, null, null, null)) {
             if (c.moveToFirst()) {
-                int idColIndex = c.getColumnIndex(NotesDbHelper.ID_FIELD);
-                int titleColIndex = c.getColumnIndex(NotesDbHelper.TITLE_FIELD);
-                int descriptionColIndex = c.getColumnIndex(NotesDbHelper.DESCRIPTION_FIELD);
-                int dateColIndex = c.getColumnIndex(NotesDbHelper.DATE_FIELD);
-                int priorityColIndex = c.getColumnIndex(NotesDbHelper.PRIORITY_FIELD);
+                int idColIndex = c.getColumnIndex(NotesDbHelperV2.ID_FIELD);
+                int titleColIndex = c.getColumnIndex(NotesDbHelperV2.TITLE_FIELD);
+                int descriptionColIndex = c.getColumnIndex(NotesDbHelperV2.DESCRIPTION_FIELD);
+                int dateColIndex = c.getColumnIndex(NotesDbHelperV2.DATE_FIELD);
+                int priorityColIndex = c.getColumnIndex(NotesDbHelperV2.PRIORITY_FIELD);
+                int imageColIndex = c.getColumnIndex(NotesDbHelperV2.IMAGE_FIELD);
                 do {
                     Note n = new Note();
                     n.setId((long) c.getInt(idColIndex));
@@ -49,7 +40,7 @@ public class NoteService {
                     n.setDescription(c.getString(descriptionColIndex));
                     n.setEditTime(new Date(c.getLong(dateColIndex)));
                     n.setPriority(PriorityType.values()[c.getInt(priorityColIndex)]);
-                    n.setImage(getImage(n.getId()));
+                    n.setImage(DbBitmapUtility.getImage(c.getBlob(imageColIndex)));
                     notes.add(n);
                 } while (c.moveToNext());
             }
@@ -59,32 +50,31 @@ public class NoteService {
     }
 
     public void AddNewNote(Note note) {
-        NotesDbHelper dbHelper = new NotesDbHelper(appContext);
+        NotesDbHelperV2 dbHelper = new NotesDbHelperV2(appContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put(NotesDbHelper.TITLE_FIELD, note.getTitle());
-        cv.put(NotesDbHelper.DESCRIPTION_FIELD, note.getDescription());
-        cv.put(NotesDbHelper.PRIORITY_FIELD, note.getPriority().getValue());
-        cv.put(NotesDbHelper.DATE_FIELD, System.currentTimeMillis());
-        final long insert = db.insert(NotesDbHelper.NOTES_TABLE, null, cv);
+        cv.put(NotesDbHelperV2.TITLE_FIELD, note.getTitle());
+        cv.put(NotesDbHelperV2.DESCRIPTION_FIELD, note.getDescription());
+        cv.put(NotesDbHelperV2.PRIORITY_FIELD, note.getPriority().getValue());
+        cv.put(NotesDbHelperV2.DATE_FIELD, System.currentTimeMillis());
+        cv.put(NotesDbHelperV2.IMAGE_FIELD, DbBitmapUtility.getBytes(note.getImage()));
+        cv.put(NotesDbHelperV2.TEXT_FIELD, note.getText());
+        final long insert = db.insert(NotesDbHelperV2.NOTES_TABLE, null, cv);
         dbHelper.close();
-        if (insert != 0) {
-            note.setId(insert);
-            saveText(note);
-            saveImage(note);
-        }
     }
 
     public Note getNote(long id) {
         Note n = null;
-        NotesDbHelper dbHelper = new NotesDbHelper(appContext);
+        NotesDbHelperV2 dbHelper = new NotesDbHelperV2(appContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        try (Cursor c = db.query(NotesDbHelper.NOTES_TABLE, null, "id = ?", new String[]{String.valueOf(id)}, null, null, null)) {
-            int idColIndex = c.getColumnIndex(NotesDbHelper.ID_FIELD);
-            int titleColIndex = c.getColumnIndex(NotesDbHelper.TITLE_FIELD);
-            int descriptionColIndex = c.getColumnIndex(NotesDbHelper.DESCRIPTION_FIELD);
-            int dateColIndex = c.getColumnIndex(NotesDbHelper.DATE_FIELD);
-            int priorityColIndex = c.getColumnIndex(NotesDbHelper.PRIORITY_FIELD);
+        try (Cursor c = db.query(NotesDbHelperV2.NOTES_TABLE, null, "id = ?", new String[]{String.valueOf(id)}, null, null, null)) {
+            int idColIndex = c.getColumnIndex(NotesDbHelperV2.ID_FIELD);
+            int titleColIndex = c.getColumnIndex(NotesDbHelperV2.TITLE_FIELD);
+            int descriptionColIndex = c.getColumnIndex(NotesDbHelperV2.DESCRIPTION_FIELD);
+            int dateColIndex = c.getColumnIndex(NotesDbHelperV2.DATE_FIELD);
+            int priorityColIndex = c.getColumnIndex(NotesDbHelperV2.PRIORITY_FIELD);
+            int textColIndex = c.getColumnIndex(NotesDbHelperV2.TEXT_FIELD);
+            int imageColIndex = c.getColumnIndex(NotesDbHelperV2.IMAGE_FIELD);
             if (c.moveToFirst()) {
                 n = new Note();
                 n.setId((long) c.getInt(idColIndex));
@@ -92,14 +82,8 @@ public class NoteService {
                 n.setDescription(c.getString(descriptionColIndex));
                 n.setEditTime(new Date(c.getLong(dateColIndex)));
                 n.setPriority(PriorityType.values()[c.getInt(priorityColIndex)]);
-                String text = getText(n.getId());
-                if (text != null) {
-                    n.setText(text);
-                }
-                Bitmap img = getImage(n.getId());
-                if (img != null) {
-                    n.setImage(img);
-                }
+                n.setImage(DbBitmapUtility.getImage(c.getBlob(imageColIndex)));
+                n.setText(c.getString(textColIndex));
             }
         }
         dbHelper.close();
@@ -107,153 +91,43 @@ public class NoteService {
     }
 
     public boolean isNoteFileContainedString(long noteId, String string){
-        String text = getText(noteId);
-        if(text != null){
-            return text.contains(string);
+        boolean res = false;
+        Note n = null;
+        NotesDbHelperV2 dbHelper = new NotesDbHelperV2(appContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        try (Cursor c = db.query(NotesDbHelperV2.NOTES_TABLE, new String[]{NotesDbHelperV2.TITLE_FIELD, NotesDbHelperV2.DESCRIPTION_FIELD, NotesDbHelperV2.TEXT_FIELD}, "id = ?", new String[]{String.valueOf(noteId)}, null, null, null)) {
+            int titleColIndex = c.getColumnIndex(NotesDbHelperV2.TITLE_FIELD);
+            int descriptionColIndex = c.getColumnIndex(NotesDbHelperV2.DESCRIPTION_FIELD);
+            int textColIndex = c.getColumnIndex(NotesDbHelperV2.TEXT_FIELD);
+            if (c.moveToFirst()) {
+                if(c.getString(titleColIndex).contains(string) || c.getString(descriptionColIndex).contains(string) || c.getString(textColIndex).contains(string)){
+                    res = true;
+                }
+            }
         }
-        return false;
+        dbHelper.close();
+        return res;
     }
 
     public void deleteNote(long id) {
-        NotesDbHelper dbHelper = new NotesDbHelper(appContext);
+        NotesDbHelperV2 dbHelper = new NotesDbHelperV2(appContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int delete = db.delete(NotesDbHelper.NOTES_TABLE, "id = ?", new String[]{String.valueOf(id)});
+        int delete = db.delete(NotesDbHelperV2.NOTES_TABLE, "id = ?", new String[]{String.valueOf(id)});
         dbHelper.close();
-        if (delete != 0) {
-            deleteText(id);
-            deleteImage(id);
-        }
     }
 
     public void updateNote(Note note) {
-        NotesDbHelper dbHelper = new NotesDbHelper(appContext);
+        NotesDbHelperV2 dbHelper = new NotesDbHelperV2(appContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put(NotesDbHelper.TITLE_FIELD, note.getTitle());
-        cv.put(NotesDbHelper.DESCRIPTION_FIELD, note.getDescription());
-        cv.put(NotesDbHelper.PRIORITY_FIELD, note.getPriority().getValue());
-        cv.put(NotesDbHelper.DATE_FIELD, System.currentTimeMillis());
-        int update = db.update(NotesDbHelper.NOTES_TABLE, cv, "id = ?", new String[]{String.valueOf(note.getId())});
+        cv.put(NotesDbHelperV2.TITLE_FIELD, note.getTitle());
+        cv.put(NotesDbHelperV2.DESCRIPTION_FIELD, note.getDescription());
+        cv.put(NotesDbHelperV2.PRIORITY_FIELD, note.getPriority().getValue());
+        cv.put(NotesDbHelperV2.DATE_FIELD, System.currentTimeMillis());
+        cv.put(NotesDbHelperV2.IMAGE_FIELD, DbBitmapUtility.getBytes(note.getImage()));
+        cv.put(NotesDbHelperV2.TEXT_FIELD, note.getText());
+        int update = db.update(NotesDbHelperV2.NOTES_TABLE, cv, "id = ?", new String[]{String.valueOf(note.getId())});
         dbHelper.close();
-        if (update != 0) {
-            saveText(note);
-            saveImage(note);
-        }
     }
 
-    public String getText(long noteId) {
-        String text = null;
-        FileInputStream fin = null;
-        try {
-            File resDir = appContext.getDir(ROOT_NOTES, Context.MODE_PRIVATE);
-            File resFile = new File(resDir, noteId + ".txt");
-            if (resFile.exists()) {
-                fin = new FileInputStream(resFile);
-                byte[] bytes = new byte[fin.available()];
-                fin.read(bytes);
-                text = new String(bytes);
-            }
-        } catch (IOException ignored) {
-
-        } finally {
-            try {
-                if (fin != null) {
-                    fin.close();
-                }
-            } catch (IOException ignored) {
-
-            }
-        }
-        return text;
-    }
-
-    public void saveText(Note note) {
-        try {
-            File resDir = appContext.getDir(ROOT_NOTES, Context.MODE_PRIVATE);
-            File resFile = new File(resDir, note.getId() + ".txt");
-            if (!resFile.exists()) {
-                final boolean newFile = resFile.createNewFile();
-                if (newFile) {
-                    FileWriter fw = new FileWriter(resFile);
-                    fw.write(note.getText());
-                    fw.flush();
-                    fw.close();
-                }
-            } else {
-                FileWriter fw = new FileWriter(resFile);
-                fw.write(note.getText());
-                fw.flush();
-                fw.close();
-            }
-        } catch (IOException ignored) {
-
-        }
-    }
-
-    public void deleteText(long noteId) {
-        File resDir = appContext.getDir(ROOT_NOTES, Context.MODE_PRIVATE);
-        File resFile = new File(resDir, noteId + ".txt");
-        if (resFile.exists()) {
-            final boolean delete = resFile.delete();
-        }
-    }
-
-    public Bitmap getImage(long noteId) {
-        Bitmap image = null;
-        FileInputStream fin = null;
-        try {
-            File resDir = appContext.getDir(ROOT_IMAGE, Context.MODE_PRIVATE);
-            File resFile = new File(resDir, noteId + ".png");
-            if (resFile.exists()) {
-                fin = new FileInputStream(resFile);
-                byte[] bytes = new byte[fin.available()];
-                fin.read(bytes);
-                image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            }
-        } catch (IOException ignored) {
-
-        } finally {
-            try {
-                if (fin != null) {
-                    fin.close();
-                }
-            } catch (IOException ignored) {
-
-            }
-        }
-        return image;
-    }
-
-    public void saveImage(Note note) {
-        if (note.getImage() != null) {
-            try {
-                File resDir = appContext.getDir(ROOT_IMAGE, Context.MODE_PRIVATE);
-                File resFile = new File(resDir, note.getId() + ".png");
-                if (!resFile.exists()) {
-                    final boolean newFile = resFile.createNewFile();
-                    if (newFile) {
-                        FileOutputStream fos = new FileOutputStream(resFile);
-                        note.getImage().compress(Bitmap.CompressFormat.PNG, 100, fos);
-                        fos.flush();
-                        fos.close();
-                    }
-                } else {
-                    FileOutputStream fos = new FileOutputStream(resFile);
-                    note.getImage().compress(Bitmap.CompressFormat.PNG, 100, fos);
-                    fos.flush();
-                    fos.close();
-                }
-            } catch (IOException ignored) {
-
-            }
-        }
-    }
-
-    public void deleteImage(long noteId) {
-        File resDir = appContext.getDir(ROOT_IMAGE, Context.MODE_PRIVATE);
-        File resFile = new File(resDir, noteId + ".png");
-        if (resFile.exists()) {
-            final boolean delete = resFile.delete();
-        }
-    }
 }
