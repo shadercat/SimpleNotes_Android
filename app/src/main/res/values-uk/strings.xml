@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Suan Chan</string>
+    <string name="add_new">Додати новий</string>
+    <string name="search">Пошук</string>
+    <string name="first_priority">Перший пріорітет</string>
+    <string name="second_priority">Другий пріорітет</string>
+    <string name="third_priority">Третій пріорітет</string>
+    <string name="note_image">Зображення</string>
+    <string name="sample">нічого</string>
+    <string name="sample_date">00/00/0000 00:00</string>
+    <string name="priority_icon">Іконка пріорітету</string>
+    <string name="edit">Змінити</string>
+    <string name="delete">Видалити</string>
+    <string name="cancel">Відміна</string>
+    <string name="title">Заголовок</string>
+    <string name="description">Опис</string>
+    <string name="text">Текст</string>
+    <string name="priority">Пріорітет</string>
+    <string name="save">Зберегти</string>
+    <string name="successful_save">Успішно збережено</string>
+    <string name="none">Нічого</string>
+</resources>
